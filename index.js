@@ -27,7 +27,7 @@ window.db = {
             if(dbs.length > 0) { 
               var html = ``;
               var d = 0; do {
-                html += `<ul>`+dbs[d].name+`</ul>`;          
+                html += `<li>`+dbs[d].name+`</li>`;
                 d++; } while(d < dbs.length);
               document.getElementById('nav-section-ul').innerHTML = html;
             }
