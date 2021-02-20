@@ -1,13 +1,3 @@
-<!DOCTYPE html>
-<html lang="en" >
-<head>
-  <meta charset="UTF-8">
-  <title>db.js</title>
-  <link rel="stylesheet" href="./index.css">
-
-</head>
-<body>
-<!-- partial:index.partial.html -->
 <noscript>
 </noscript>
 <nav>
@@ -118,7 +108,17 @@
       database: (event) => {
         event.preventDefault();
         var name = event.target.find('[type="text"]').value;
-        db.create.database(name, 1);
+        db.create.database(name, 1).then(async() => {      
+            var dbs = await indexedDB.databases();
+            if(dbs.length > 0) { 
+              var html = ``;
+              var d = 0; do {
+                html += `<li>`+dbs[d].name+`</li>`;
+                d++; } while(d < dbs.length);
+              document.getElementById('nav-section-ul').innerHTML = html;
+            }
+          
+        });
       }
     }
   }
@@ -201,10 +201,3 @@
     /*Router*/
   }
 </script>
-<!-- partial -->
-<script src='./jpurey.js'></script>
-<script src='./router.js'></script>
-<script  src="./index.js"></script>
-
-</body>
-</html>
