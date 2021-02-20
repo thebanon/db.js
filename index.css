@@ -1,0 +1,80 @@
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  margin-left: 180px;
+  font-family: Arial;
+  padding-top: 50px;
+}
+
+nav {
+  width: 180px;
+  height: 100%;
+  background: #ddd;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+nav header {
+  width: 100%;
+}
+nav header .title {
+  height: 30px;
+  line-height: 30px;
+  padding: 10px;
+  text-align: center;
+  font-size: 24px;
+}
+nav section ul {
+  padding: 0;
+}
+nav section ul li {
+  line-height: 30px;
+  padding: 10px;
+}
+
+
+.page {
+  display: none;
+}
+
+.main-section {
+  display: none;
+}
+
+.main-section-header {
+  position: fixed;
+  top: 0;
+  background: white;
+  width: 100%;
+  border-bottom: 1px solid #ddd;
+  white-space: nowrap;
+  line-height: 50px;
+}
+.main-section-header > * {
+  display: inline-block;
+  padding: 0 10px;
+}
+
+/*Pages*/
+body[data-path="/"] .page-index {
+  display: block;
+}
+body[data-path="/databases/"] .page-databases {
+  display: block;
+}
+body[data-path="/"] .section-databases,
+body[data-path="/databases/"] .section-databases,
+body[data-path="/export/"] .section-databases,
+body[data-path="/import/"] .section-databases {
+  display: block;
+}
+body[data-path="/*/structure/"] .section-database,
+body[data-path="/*/search/"] .section-database,
+body[data-path="/*/export/"] .section-database,
+body[data-path="/*/import/"] .section-database {
+  display: block;
+}
