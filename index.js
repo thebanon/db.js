@@ -21,16 +21,8 @@ window.db = {
           request.onsuccess = async function(event) {
             db.con = request.result;
             var tables = db.con.objectStoreNames;
-            console.log("success: ", db.con,tables);     
-
-            var dbs = await indexedDB.databases();
-            if(dbs.length > 0) { 
-              var html = ``;
-              var d = 0; do {
-                html += `<li>`+dbs[d].name+`</li>`;
-                d++; } while(d < dbs.length);
-              document.getElementById('nav-section-ul').innerHTML = html;
-            }
+            console.log("success: ", db.con,tables); 
+            resolve(tables);
           };
           request.onupgradeneeded = function(event) {
             console.log('onupgradeneeded', db.schema.app);
