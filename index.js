@@ -7,6 +7,37 @@ window.db = {
 
     con: null,
 
+    open: (name,version) => {
+        return new Promise((resolve,reject) => {         
+          var request = window.indexedDB.open(name,version);
+          request.onerror = function(event) {
+            console.log("error: ");
+          };
+          request.onsuccess = async function(event) {
+            db.con = request.result;
+            var tables = db.con.objectStoreNames;
+            console.log("success: ", db.con,tables); 
+            resolve(tables);
+          };
+          request.onupgradeneeded = function(event) {
+            console.log('onupgradeneeded', name);
+            if(db.schema && db.schema.app) {
+                var keys = db.schema["app"];
+                if(keys.length > 0) {
+                  var k = 0; do {
+                    var key = keys[k];
+                    console.log({key});
+                    if(k === 0) { var keyPath = key; }
+                    k++; } while(k < keys.length);
+                  console.log({keyPath});
+                  var objectStore = event.target.result.createObjectStore("app", {keyPath});
+                  //objectStore.add(db.json.app[0]);
+                }
+            }
+          };                 
+        });        
+    },
+
     query: (tables,method) => {
         return db.con.transaction(tables,method);
     },
@@ -41,9 +72,9 @@ window.db = {
           };                 
         });
       },
-      table: (table,json) => {
+      row: (table,json) => { console.log({table,json});
         return new Promise((resolve,reject) => {
-            var request = db.query([table], "readwrite").objectStore(table).add(json);
+            var request = db.query([table],"readwrite").objectStore(table).add(json);
             request.onsuccess = function (event) {
                 resolve();
             };
@@ -55,6 +86,32 @@ window.db = {
     },
 
     read: {
+        databases: async() => {
+            return await indexedDB.databases();
+        },
+        table: (table,key) => {
+            return new Promise((resolve,reject) => {
+
+               var returnData = []; console.log(table);
+               var trans = db.con.transaction([table], "readwrite");
+               var store = trans.objectStore(table);
+
+               var keyRange = IDBKeyRange.lowerBound(0);
+               var cursorRequest = store.openCursor(keyRange);
+
+               cursorRequest.onerror = window.indexedDB.onerror;
+               cursorRequest.onsuccess = function(e) {
+                  var result = e.target.result;
+                  if(!!result == false) {
+                     resolve(returnData);
+                     return
+                  }
+                  returnData.push(result.value);
+                  result.continue();
+               };
+
+            });
+        },
         row: (table,key) => {
             return new Promise((resolve,reject) => {
                 var request = db.query([table], "readwrite").objectStore(table).get(key);
