@@ -8,7 +8,7 @@ window.db = {
     con: null,
 
     open: (name,version) => {
-        return new Promise((resolve,reject) => {         
+        return new Promise((resolve,reject) => {
           var request = window.indexedDB.open(name,version);
           request.onerror = function(event) {
             console.log("error: ");
@@ -16,7 +16,7 @@ window.db = {
           request.onsuccess = async function(event) {
             db.con = request.result;
             var tables = db.con.objectStoreNames;
-            console.log("success: ", db.con,tables); 
+            console.log("success: ", db.con,tables);
             resolve(tables);
           };
           request.onupgradeneeded = function(event) {
@@ -34,8 +34,8 @@ window.db = {
                   //objectStore.add(db.json.app[0]);
                 }
             }
-          };                 
-        });        
+          };
+        });
     },
 
     query: (tables,method) => {
@@ -44,7 +44,7 @@ window.db = {
 
     create: {
       database: (name,version) => {
-        return new Promise((resolve,reject) => {         
+        return new Promise((resolve,reject) => {
           var request = window.indexedDB.open(name,version);
           request.onerror = function(event) {
             console.log("error: ");
@@ -52,7 +52,7 @@ window.db = {
           request.onsuccess = async function(event) {
             db.con = request.result;
             var tables = db.con.objectStoreNames;
-            console.log("success: ", db.con,tables); 
+            console.log("success: ", db.con,tables);
             resolve(tables);
           };
           request.onupgradeneeded = function(event) {
@@ -69,7 +69,7 @@ window.db = {
               var objectStore = event.target.result.createObjectStore("app", {keyPath});
               objectStore.add(db.json.app[0]);
             }
-          };                 
+          };
         });
       },
       row: (table,json) => { console.log({table,json});
@@ -139,16 +139,18 @@ window.db = {
       }
     },
 
-    delete: (table,id) => {
-        return new Promise((resolve,reject) => {
-            var request = db.query([table], "readwrite").objectStore(table).delete(id);
-            request.onsuccess = function (event) {
-                resolve();
-            };
-            request.onerror = function (event) {
-                reject();
-            }
-        });
+    delete: {
+      row: (table,id) => {
+          return new Promise((resolve,reject) => {
+              var request = db.query([table], "readwrite").objectStore(table).delete(id);
+              request.onsuccess = function (event) {
+                  resolve(event);
+              };
+              request.onerror = function (event) {
+                  reject(event);
+              }
+          });
+      }
     }
-  
+
 };
