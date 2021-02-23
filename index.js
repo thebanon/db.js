@@ -21,16 +21,17 @@ window.db = {
           };
           request.onupgradeneeded = function(event) {
             console.log('onupgradeneeded', name);
-            if(db.schema && db.schema.app) {
-                var keys = db.schema["app"];
+            if(db.schema) {
+                var keys = Object.keys(db.schema);
                 if(keys.length > 0) {
                   var k = 0; do {
-                    var key = keys[k];
-                    console.log({key});
-                    if(k === 0) { var keyPath = key; }
-                    k++; } while(k < keys.length);
+                    var key = keys[k]; console.log({key});
+                    var d = 0; do {
+                        if(d === 0) { var keyPath = Object.values(db.schema)[k][d]; }
+                    d++; } while(d < Object.values(db.schema)[k].length);
+                    var objectStore = event.target.result.createObjectStore(key, {keyPath});
+                  k++; } while(k < keys.length);
                   console.log({keyPath});
-                  var objectStore = event.target.result.createObjectStore("app", {keyPath});
                   //objectStore.add(db.json.app[0]);
                 }
             }
@@ -126,6 +127,9 @@ window.db = {
     },
 
     update: {
+      project: (domain) => { console.log({domain});
+
+      },
       row: (table,json,id) => {
         return new Promise((resolve,reject) => { console.log({table,id,json});
             var request = db.query([table], "readwrite").objectStore(table).put(json);
