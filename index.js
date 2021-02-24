@@ -23,16 +23,29 @@ window.db = {
             console.log('onupgradeneeded', name);
             if(db.schema) {
                 var keys = Object.keys(db.schema);
+                var values = Object.values(db.schema);
                 if(keys.length > 0) {
+
                   var k = 0; do {
-                    var key = keys[k]; console.log({key});
-                    var d = 0; do {
-                        if(d === 0) { var keyPath = Object.values(db.schema)[k][d]; }
-                    d++; } while(d < Object.values(db.schema)[k].length);
+
+                    var key = keys[k];
+                    var value = values[k];
+                    var keyPath = value.keyPath;
                     var objectStore = event.target.result.createObjectStore(key, {keyPath});
+                    //console.log({key,keyPath});
+
+                    var indices = value.indices;
+                    var i = 0; do {
+                      var indice = Object.keys(indices)[i];
+                      var option = Object.values(indices)[i];
+                      console.log(i, {indice,option});
+                      objectStore.createIndex(indice, indice, option);
+                    i++; } while(i < Object.keys(indices).length);
+
                   k++; } while(k < keys.length);
-                  console.log({keyPath});
+                  //console.log({keyPath});
                   //objectStore.add(db.json.app[0]);
+
                 }
             }
           };
@@ -93,11 +106,19 @@ window.db = {
         table: (table,key) => {
             return new Promise((resolve,reject) => {
 
-               var returnData = []; console.log(table);
+               var returnData = [];
                var trans = db.con.transaction([table], "readwrite");
                var store = trans.objectStore(table);
 
-               var keyRange = IDBKeyRange.lowerBound(0);
+               if(key) {
+                 var index = Object.keys(key)[0];
+                 var value = Object.values(key)[0];
+                 console.log({key,index,value,table,store});
+                 const vendorIndex = store.index(index);
+                 const keyRng = IDBKeyRange.only(value);
+                 var keyRange = IDBKeyRange.lowerBound(0);
+               }
+
                var cursorRequest = store.openCursor(keyRange);
 
                cursorRequest.onerror = window.indexedDB.onerror;
