@@ -139,7 +139,13 @@
     /*Database*/
     window.db.name = 'jsDb';
     window.db.schema = {
-      app: ["domain", "name", "description"]
+      app: {
+        keyPath: ["uid"],
+        indices: {
+          "uid": { unique: true },
+          "name": { unique: false }
+        }
+      }
     };
     window.db.json = {
       app: [{
