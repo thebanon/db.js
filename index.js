@@ -31,8 +31,11 @@ window.db = {
                     var key = keys[k];
                     var value = values[k];
                     var keyPath = value.keyPath;
+
+                    if(keyPath) {
                     var objectStore = event.target.result.createObjectStore(key, {keyPath});
                     //console.log({key,keyPath});
+                    }
 
                     var indices = value.indices;
                     var i = 0; do {
@@ -90,10 +93,10 @@ window.db = {
         return new Promise((resolve,reject) => {
             var request = db.query([table],"readwrite").objectStore(table).add(json);
             request.onsuccess = function (event) {
-                resolve();
+                resolve(event);
             };
             request.onerror = function (event) {
-                reject();
+                reject(event);
             }
         });
       }
@@ -107,38 +110,33 @@ window.db = {
             return new Promise((resolve,reject) => {
 
                var returnData = [];
-               var trans = db.con.transaction([table], "readwrite");
-               var store = trans.objectStore(table);
 
                if(key) {
-                 var index = Object.keys(key)[0];
-                 var value = Object.values(key)[0];
-                 console.log({key,index,value,table,store});
-                 const vendorIndex = store.index(index);
-                 const keyRng = IDBKeyRange.only(value);
-                 var keyRange = IDBKeyRange.lowerBound(0);
+                 var index = Object.keys(key)[0], value = Object.values(key)[0];
+                 var cursorRequest = db.con.transaction(table).objectStore(table).index(index).openCursor(IDBKeyRange.only(value));
+               } else {
+                 var cursorRequest = db.con.transaction([table], "readwrite").objectStore(table).openCursor(IDBKeyRange.lowerBound(0));
                }
-
-               var cursorRequest = store.openCursor(keyRange);
+               console.log('KEY',key,{table,index,value});
 
                cursorRequest.onerror = window.indexedDB.onerror;
                cursorRequest.onsuccess = function(e) {
-                  var result = e.target.result;
-                  if(!!result == false) {
+                  var cursor = e.target.result;
+                  if(!!cursor == false) {
                      resolve(returnData);
                      return
                   }
-                  returnData.push(result.value);
-                  result.continue();
+                  returnData.push(cursor.value);
+                  cursor.continue();
                };
 
             });
         },
-        row: (table,key) => {
+        row: (table,index,key) => {
             return new Promise((resolve,reject) => {
-                var request = db.query([table], "readwrite").objectStore(table).get(key);
+                var request = db.con.transaction(table).objectStore(table).index(index).get(key);
                 request.onsuccess = function (event) {
-                    resolve(event.target);
+                    resolve(event.target.result);
                 };
                 request.onerror = function (event) {
                     reject(event.target);
@@ -165,16 +163,28 @@ window.db = {
     },
 
     delete: {
-      row: (table,id) => {
-          return new Promise((resolve,reject) => {
-              var request = db.query([table], "readwrite").objectStore(table).delete(id);
-              request.onsuccess = function (event) {
-                  resolve(event);
-              };
-              request.onerror = function (event) {
-                  reject(event);
-              }
-          });
+      row: (table,id) => { console.log({table,id});
+        return new Promise((resolve,reject) => {
+            var transaction = db.con.transaction([table], "readwrite");
+            transaction.oncomplete = event => console.log('<li>Transaction completed.</li>');              
+            transaction.onerror = event => reject('<li>Transaction not opened due to error: ' + transaction.error + '</li>');
+
+            var store = transaction.objectStore(table);
+
+            var tagIndex = store.index("path");
+            var pdestroy = tagIndex.openKeyCursor(IDBKeyRange.only(id)); //opens all records bearing the selected tag number
+            pdestroy.onsuccess = () => {
+                var cursor = pdestroy.result;
+                if(cursor) {
+                    store.delete(cursor.primaryKey);
+                    cursor.continue;
+                }
+            }
+            pdestroy.onerror = function() { reject("Deletion attempt NG"); }
+            var ereq = store.delete(id);
+            ereq.onsuccess = function(e) { resolve("Form deletion OK"); }
+            ereq.onerror = function(e) { reject("Form deletion NG"); }
+        });
       }
     }
 
